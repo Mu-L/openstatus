@@ -41,7 +41,7 @@ export default function Page() {
           </SectionDescription>
         </SectionHeader>
         <FormCardGroup>
-          {workspace?.plan !== "free" ? (
+          {workspace?.limits["slack-agent"] ? (
             <SlackIntegrationCard
               integration={
                 slackIntegration
