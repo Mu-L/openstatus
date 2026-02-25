@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { type SQL, and, count, db, eq, inArray } from "@openstatus/db";
+import { type SQL, and, count, eq, inArray } from "@openstatus/db";
 import {
   NotificationDataSchema,
   googleChatDataSchema,
@@ -191,27 +191,11 @@ export const notificationRouter = createTRPCRouter({
       return currentNotification;
     }),
 
-  deleteNotification: protectedProcedure
-    .meta({ track: Events.DeleteNotification })
-    .input(z.object({ id: z.number() }))
-    .mutation(async (opts) => {
-      await opts.ctx.db
-        .delete(notification)
-        .where(
-          and(
-            eq(notification.id, opts.input.id),
-            eq(notification.id, opts.input.id),
-          ),
-        )
-        .run();
-    }),
-
   getNotificationById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async (opts) => {
       const _notification = await opts.ctx.db.query.notification.findFirst({
         where: and(
-          eq(notification.id, opts.input.id),
           eq(notification.id, opts.input.id),
           eq(notification.workspaceId, opts.ctx.workspace.id),
         ),
@@ -302,7 +286,6 @@ export const notificationRouter = createTRPCRouter({
       }),
     )
     .mutation(async (opts) => {
-      console.log(opts.input);
       const whereCondition: SQL[] = [
         eq(notification.id, opts.input.id),
         eq(notification.workspaceId, opts.ctx.workspace.id),
@@ -331,7 +314,7 @@ export const notificationRouter = createTRPCRouter({
         });
       }
 
-      await db.transaction(async (tx) => {
+      await opts.ctx.db.transaction(async (tx) => {
         await tx
           .update(notification)
           .set({
@@ -438,8 +421,8 @@ export const notificationRouter = createTRPCRouter({
         });
       }
 
-      const _notification = await db.transaction(async (tx) => {
-        const _notification = await opts.ctx.db
+      const _notification = await opts.ctx.db.transaction(async (tx) => {
+        const _notification = await tx
           .insert(notification)
           .values({
             name: opts.input.name,
