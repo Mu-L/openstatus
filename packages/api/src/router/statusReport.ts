@@ -264,6 +264,20 @@ export const statusReportRouter = createTRPCRouter({
       }),
     )
     .mutation(async (opts) => {
+      const existing = await opts.ctx.db.query.statusReport.findFirst({
+        where: and(
+          eq(statusReport.id, opts.input.id),
+          eq(statusReport.workspaceId, opts.ctx.workspace.id),
+        ),
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Status report not found",
+        });
+      }
+
       await opts.ctx.db.transaction(async (tx) => {
         await tx
           .update(statusReport)
